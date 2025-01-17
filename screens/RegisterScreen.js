@@ -1,19 +1,48 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { register } from '../services/api';
 
 const RegisterScreen = ({ navigation }) => {
-    const [formData, setFormData] = useState({
-        name: '',
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
+    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [password_confirmation, setPasswordConfirmation] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleRegister = () => {
-        // Add registration logic here
-        console.log('Register with:', formData);
+    const handleRegister = async () => {
+        if (!name || !username || !email || !password || !password_confirmation) {
+            Alert.alert('Error', 'Please fill all fields');
+            return;
+        }
+
+        if (password !== password_confirmation) {
+            Alert.alert('Error', 'Passwords do not match');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const userData = {
+                name,
+                username,
+                email,
+                password,
+                password_confirmation
+            };
+
+
+            const response = await register(userData);
+            if (response) {
+                Alert.alert('Success', response.message);
+                navigation.navigate('Login');
+            }
+        } catch (error) {
+            Alert.alert('Try Again', 'The data you entered is already registered');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -24,44 +53,52 @@ const RegisterScreen = ({ navigation }) => {
 
                     <TextInput
                         style={styles.input}
-                        placeholder="name"
-                        value={formData.name}
-                        onChangeText={(text) => setFormData({ ...formData, name: text })}
+                        placeholder="Name"
+                        value={name}
+                        onChangeText={setName}
                     />
 
                     <TextInput
                         style={styles.input}
-                        placeholder="username"
-                        value={formData.username}
-                        onChangeText={(text) => setFormData({ ...formData, username: text })}
+                        placeholder="Username"
+                        value={username}
+                        onChangeText={setUsername}
+                        autoCapitalize="none"
                     />
 
                     <TextInput
                         style={styles.input}
                         placeholder="Email"
                         keyboardType="email-address"
-                        value={formData.email}
-                        onChangeText={(text) => setFormData({ ...formData, email: text })}
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
                     />
 
                     <TextInput
                         style={styles.input}
                         placeholder="Password"
                         secureTextEntry
-                        value={formData.password}
-                        onChangeText={(text) => setFormData({ ...formData, password: text })}
+                        value={password}
+                        onChangeText={setPassword}
                     />
 
                     <TextInput
                         style={styles.input}
                         placeholder="Confirm Password"
                         secureTextEntry
-                        value={formData.confirmPassword}
-                        onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                        value={password_confirmation}
+                        onChangeText={setPasswordConfirmation}
                     />
 
-                    <TouchableOpacity style={styles.button} onPress={handleRegister}>
-                        <Text style={styles.buttonText}>Register</Text>
+                    <TouchableOpacity
+                        style={[styles.button, isLoading && styles.buttonDisabled]}
+                        onPress={handleRegister}
+                        disabled={isLoading}
+                    >
+                        <Text style={styles.buttonText}>
+                            {isLoading ? 'Registering...' : 'Register'}
+                        </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => navigation.navigate('Login')}>

@@ -8,17 +8,34 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
+    Alert,
 } from 'react-native';
+import { login } from '../services/api';
 
 const LoginScreen = ({ navigation }) => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = () => {
-        console.log('Navigating to RecipeList screen');
-        navigation.navigate('Recipes');
+    const handleLogin = async () => {
+        if (!username || !password) {
+            Alert.alert('Error', 'Please enter both username and password');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await login(username, password);
+            if (response) {
+                Alert.alert('Success', response.message);
+                navigation.navigate('Recipes');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
-    
 
     return (
         <KeyboardAvoidingView
@@ -28,7 +45,7 @@ const LoginScreen = ({ navigation }) => {
             <View style={styles.logoContainer}>
                 <Image
                     source={require('../assets/logo.png')}
-                    style={[styles.logo, { backgroundColor: 'transparent' }]} // Added transparent background
+                    style={[styles.logo, { backgroundColor: 'transparent' }]}
                 />
                 <Text style={styles.title}>Recipe App</Text>
             </View>
@@ -36,11 +53,10 @@ const LoginScreen = ({ navigation }) => {
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Email"
+                    placeholder="Username"
                     placeholderTextColor="#666"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
+                    value={username}
+                    onChangeText={setUsername}
                     autoCapitalize="none"
                 />
                 <TextInput
@@ -52,11 +68,18 @@ const LoginScreen = ({ navigation }) => {
                     secureTextEntry
                 />
 
-                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                    <Text style={styles.loginButtonText}>Login</Text>
+                <TouchableOpacity
+                    style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                >
+                    <Text style={styles.loginButtonText}>
+                        {isLoading ? 'Logging in...' : 'Login'}
+                    </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.registerLink}
+                <TouchableOpacity
+                    style={styles.registerLink}
                     onPress={() => navigation.navigate('Register')}
                 >
                     <Text style={styles.registerText}>
