@@ -53,7 +53,7 @@ export const register = async (userData) => {
 // Fetch recipes API call
 export const fetchRecipes = async () => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/recipes/all`);
+        const response = await axios.get(`${API_BASE_URL}/api/recipes/all`);
         return response.data;
     } catch (error) {
         console.error('Error fetching recipes:', error);
@@ -63,7 +63,7 @@ export const fetchRecipes = async () => {
 // Fetch recipe by ID API call
 export const fetchRecipeById = async (id) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/recipes/${id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/recipes/${id}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching recipe:', error);
