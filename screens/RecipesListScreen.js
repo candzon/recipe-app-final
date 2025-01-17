@@ -1,27 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+// import { useNavigation } from '@react-navigation/native';
+import { fetchRecipes } from '../services/api';
 
 const RecipesListScreen = ({ navigation }) => {
-    // Sample data - replace with your actual recipe data
-    const recipes = [
-        {
-            id: '1',
-            title: 'Spaghetti Carbonara',
-            time: '30 mins',
-            servings: '2',
-            difficulty: 'Medium',
-            ingredients: ['Eggs', 'Parmesan cheese', 'Spaghetti', 'Pancetta', 'Pepper'],
-            instructions: ['Cook spaghetti', 'Fry pancetta', 'Mix eggs and cheese', 'Combine everything'],
-            image: 'https://bellyfull.net/wp-content/uploads/2023/02/Spaghetti-Carbonara-blog-1.jpg',
-        },
-    ];
+    const [recipes, setRecipes] = useState([]);
+
+    useEffect(() => {
+        const loadRecipes = async () => {
+            try {
+                const data = await fetchRecipes();
+                setRecipes(data);
+            } catch (error) {
+                console.error('Error fetching recipes:', error);
+            }
+        };
+
+        loadRecipes();
+    }, []);
 
     const renderRecipeCard = ({ item }) => (
         <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate('RecipeDetail', { recipe: item })} // Pass the whole recipe object
+            onPress={() => navigation.navigate('RecipeDetail', { recipe: item.id })}
         >
             <Image
                 source={{ uri: item.image }}
@@ -29,15 +31,15 @@ const RecipesListScreen = ({ navigation }) => {
                 defaultSource={require('../assets/placeholder.jpg')}
             />
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.title}>{item.name}</Text>
                 <View style={styles.infoContainer}>
                     <View style={styles.infoItem}>
                         <AntDesign name="clockcircle" size={16} color="#FF6B6B" />
-                        <Text style={styles.infoText}>{item.time}</Text>
+                        <Text style={styles.infoText}>{item.duration}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <AntDesign name="star" size={16} color="#FF6B6B" />
-                        <Text style={styles.infoText}>{item.difficulty}</Text>
+                        <Text style={styles.infoText}>Medium</Text>
                     </View>
                 </View>
             </View>

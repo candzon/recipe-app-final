@@ -1,10 +1,55 @@
-import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    Image,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+    Alert
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { fetchRecipeById } from '../services/api';
 
 const RecipesDetailScreen = ({ route }) => {
-    const { recipe } = route.params || {};
+    const { recipe: recipeId } = route.params;
+    const [recipe, setRecipe] = useState({
+        name: '',
+        image: '',
+        duration: '',
+        servings: '',
+        ingredients: [], // Initialize as empty array
+        instructions: [] // Initialize as empty array
+    });
+    const [isLoading, setIsLoading] = useState(true);
     const [completedInstructions, setCompletedInstructions] = useState([]);
+
+    useEffect(() => {
+        const loadRecipeDetails = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetchRecipeById(recipeId);
+
+                // Parse JSON strings into arrays
+                const formattedData = {
+                    ...response,
+                    ingredients: JSON.parse(response.ingredients || '[]'),
+                    instructions: JSON.parse(response.instructions || '[]')
+                };
+
+                setRecipe(formattedData);
+                console.log('Formatted Recipe:', formattedData);
+            } catch (error) {
+                console.error('Error fetching recipe:', error);
+                Alert.alert('Error', 'Failed to load recipe details');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadRecipeDetails();
+    }, [recipeId]);
 
     const toggleCompletion = (index) => {
         setCompletedInstructions(prev =>
@@ -14,27 +59,34 @@ const RecipesDetailScreen = ({ route }) => {
         );
     };
 
-    const completedCount = completedInstructions.length;
-    const totalInstructions = recipe.instructions.length;
-
-    if (!recipe) {
+    if (isLoading) {
         return (
-            <View style={styles.container}>
-                <Text>Loading...</Text>
+            <View style={[styles.container, styles.centered]}>
+                <ActivityIndicator size="large" color="#FF6B6B" />
             </View>
         );
     }
+
+    if (!recipe) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <Text>Recipe not found</Text>
+            </View>
+        );
+    }
+
+    const completedCount = completedInstructions.length;
+    const totalInstructions = recipe.instructions?.length || 0;
 
     return (
         <ScrollView style={styles.container}>
             <Image source={{ uri: recipe.image }} style={styles.image} />
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>{recipe.title}</Text>
-                
+                <Text style={styles.title}>{recipe.name}</Text>
                 <View style={styles.infoContainer}>
                     <View style={styles.infoItem}>
                         <Ionicons name="time-outline" size={24} color="#FF6B6B" />
-                        <Text style={styles.infoText}>{recipe.time} mins</Text>
+                        <Text style={styles.infoText}>{recipe.duration}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Ionicons name="people-outline" size={24} color="#FF6B6B" />
@@ -44,7 +96,7 @@ const RecipesDetailScreen = ({ route }) => {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Ingredients</Text>
-                    {recipe.ingredients.map((ingredient, index) => (
+                    {recipe.ingredients?.map((ingredient, index) => (
                         <Text key={index} style={styles.listItem}>• {ingredient}</Text>
                     ))}
                 </View>
@@ -54,17 +106,17 @@ const RecipesDetailScreen = ({ route }) => {
                     <Text style={styles.progressText}>
                         Progress: {completedCount} / {totalInstructions} completed
                     </Text>
-                    {recipe.instructions.map((instruction, index) => (
+                    {recipe.instructions?.map((instruction, index) => (
                         <View key={index} style={styles.instructionContainer}>
                             <TouchableOpacity onPress={() => toggleCompletion(index)}>
-                                <Ionicons 
+                                <Ionicons
                                     name={completedInstructions.includes(index) ? 'checkbox-outline' : 'square-outline'}
                                     size={24}
                                     color="#FF6B6B"
                                 />
                             </TouchableOpacity>
                             <Text style={[
-                                styles.listItem, 
+                                styles.listItem,
                                 completedInstructions.includes(index) && styles.completed
                             ]}>
                                 {index + 1}. {instruction}
