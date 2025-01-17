@@ -69,3 +69,24 @@ export const fetchRecipeById = async (id) => {
         console.error('Error fetching recipe:', error);
     }
 };
+
+
+// Fetch Shops API call
+export const fetchShops = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/shops/all`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching shops:', error);
+    }
+};
+
+// Fetch Shop by ID API call
+export const fetchShopById = async (id) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/shops/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching recipe:', error);
+    }
+};
